@@ -9,6 +9,11 @@
 - Xor
 - Nxor
 
+## Build
+```BASH
+cargo build --release
+```
+
 ## Usage
 ```BASH
 Usage: bate [OPTIONS] --file <FILE> --keys <KEYS>
