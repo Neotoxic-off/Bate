@@ -1,7 +1,10 @@
 # Bate
 🚪 Logical gate encyption bruteforcer
 
-## Decryption
-- Restart loop
-- Salt item
-- Caesar padding
+## Gates
+- Or
+- And
+- Nor
+- Nand
+- Xor
+- Nxor

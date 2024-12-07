@@ -1,4 +1,4 @@
-use std::str;
+use std::{collections::HashMap, str};
 use log::{info, warn};
 
 pub use crate::gate;
@@ -23,14 +23,24 @@ impl Core {
 
     pub fn run(&mut self, content: Vec<u8>, keys: Vec<String>) -> () {
         let mut processed: Vec<u8> = Vec::new();
+        let operations: HashMap<&str, fn(u8, u8) -> u8> = HashMap::from([
+            ("AND", gate::and as fn(u8, u8) -> u8),
+            ("OR", gate::or as fn(u8, u8) -> u8),
+            ("XOR", gate::xor as fn(u8, u8) -> u8),
+            ("NAND", gate::nand as fn(u8, u8) -> u8),
+            ("NOR", gate::nor as fn(u8, u8) -> u8),
+            ("NXOR", gate::nxor as fn(u8, u8) -> u8)
+        ]);
 
-        for key in keys.iter() {
-            processed = self.process(gate::xor, &content, &key.as_bytes().to_owned());
-            self.check(&key, &processed);
+        for (operation_title, operation) in operations.iter() {
+            for key in keys.iter() {
+                processed = self.process(operation, &content, &key.as_bytes().to_owned());
+                self.check(operation_title, &key, &processed);
+            }
         }
     }
 
-    fn process(&mut self, operation: fn(u8, u8) -> u8, content: &Vec<u8>, key: &Vec<u8>) -> Vec<u8> {
+    fn process(&mut self, operation: &fn(u8, u8) -> u8, content: &Vec<u8>, key: &Vec<u8>) -> Vec<u8> {
         let mut processed: Vec<u8> = Vec::new();
         let mut sub_offset: usize = 0;
         let short = key;
@@ -47,15 +57,15 @@ impl Core {
         processed
     }
 
-    fn render(&self, key: &String, score: f64) -> () {
+    fn render(&self, operation_title: &&str, key: &String, score: f64) -> () {
         let total_width: usize = 40;
-        let dot_count: usize = total_width.saturating_sub(key.len() + 5);
+        let dot_count: usize = total_width.saturating_sub(key.len() + operation_title.len() + 5);
         let dots: String = ".".repeat(dot_count);
 
-        info!("{}{}: {:.1}%", key, dots, score * 100.0);
+        info!("{}({}){}: {:.1}%", operation_title, key, dots, score * 100.0);
     }
 
-    fn check(&self, key: &String, decrypted: &Vec<u8>) -> () {
+    fn check(&self, operation_title: &&str, key: &String, decrypted: &Vec<u8>) -> () {
         let ascii_score = decrypted
             .iter()
             .filter(|&&byte| byte.is_ascii_alphanumeric() || byte.is_ascii_whitespace())
@@ -63,7 +73,7 @@ impl Core {
         let score: f64 = ascii_score / decrypted.len() as f64;
 
         if score >= self.score {
-            self.render(key, score);
+            self.render(operation_title, key, score);
         }
     }
 }
