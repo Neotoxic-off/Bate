@@ -28,12 +28,23 @@ fn read_source_file(path: String) -> Vec<u8> {
     result
 }
 
+fn read_keys_file(path: String) -> Vec<String> {
+    let mut result: Vec<String> = Vec::new();
+
+    if io::file::File::exists(&path) == true {
+        result = io::file::File::read_lines(&path);
+    }
+
+    result
+}
+
 fn main() -> () {
     setup();
     
     let arguments: models::arguments::Arguments = load_argument();
     let mut core: Core = Core::new(arguments.minimum, arguments.maximum, arguments.score);
     let content: Vec<u8> = read_source_file(arguments.file);
+    let keys: Vec<String> = read_keys_file(arguments.keys);
 
-    core.run(content);
+    core.run(content, keys);
 }

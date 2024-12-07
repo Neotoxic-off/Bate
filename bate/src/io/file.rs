@@ -1,3 +1,4 @@
+use std::fs::read_to_string;
 use std::path::Path;
 use std::io::{Read, Write};
 
@@ -27,5 +28,15 @@ impl File {
         file.read_to_end(&mut contents)?;
     
         Ok(contents)
+    }
+
+    pub fn read_lines(filename: &str) -> Vec<String> {
+        let mut result = Vec::new();
+    
+        for line in read_to_string(filename).unwrap().lines() {
+            result.push(line.trim_end().to_string());
+        }
+    
+        result
     }
 }

@@ -1,0 +1,3 @@
+cd bate
+
+cargo build

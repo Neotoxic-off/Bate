@@ -1,4 +1,5 @@
-use indicatif::ProgressBar;
+use std::str;
+use log::{info, warn};
 
 pub use crate::gate;
 
@@ -8,12 +9,6 @@ pub struct Core
     pub maximum: u64,
     pub score: f64,
     pub size: u64,
-    pub value: Vec<u8>,
-    pub key: Vec<u8>,
-    pub current_keys: Vec<Vec<u8>>,
-    pub keys: Vec<Vec<u8>>,
-    
-    progress: ProgressBar
 }
 
 impl Core {
@@ -22,48 +17,53 @@ impl Core {
             minimum,
             maximum,
             score,
-            size: 0,
-            value: Vec::new(),
-            key: Vec::new(),
-            keys: Vec::new(),
-            progress: ProgressBar::new(maximum - minimum)
+            size: 0
         }
     }
 
-    pub fn run(&mut self, content: Vec<u8>) -> () {
-        for key_size in self.minimum..self.maximum {
-            self.build_key(key_size);
-            self.progress.inc(1);
-            self.value = self.process(gate::xor);
-            self.check();
-        }
-
-        self.progress.finish();
-    }
-
-    fn build_key(&mut self, size: u64) -> Vec<u8> {
-        self.key.clear();
-
-        for i in 0..size {
-            self.key.push();
-        }
-    }
-
-    fn process(&mut self, operation: fn(u8, u8) -> u8) -> Vec<u8> {
+    pub fn run(&mut self, content: Vec<u8>, keys: Vec<String>) -> () {
         let mut processed: Vec<u8> = Vec::new();
 
-        for (item) in self.value.iter() {
-            processed.push(operation());
+        for key in keys.iter() {
+            processed = self.process(gate::xor, &content, &key.as_bytes().to_owned());
+            self.check(&key, &processed);
+        }
+    }
+
+    fn process(&mut self, operation: fn(u8, u8) -> u8, content: &Vec<u8>, key: &Vec<u8>) -> Vec<u8> {
+        let mut processed: Vec<u8> = Vec::new();
+        let mut sub_offset: usize = 0;
+        let short = key;
+        let long = content;
+    
+        for index in 0..long.len() {
+            if sub_offset == short.len() {
+                sub_offset = 0;
+            }
+            processed.push(operation(long[index], short[sub_offset]));
+            sub_offset += 1;
         }
 
         processed
     }
 
-    fn resume(&self) -> () {
+    fn render(&self, key: &String, score: f64) -> () {
+        let total_width: usize = 40;
+        let dot_count: usize = total_width.saturating_sub(key.len() + 5);
+        let dots: String = ".".repeat(dot_count);
 
+        info!("{}{}: {:.1}%", key, dots, score * 100.0);
     }
 
-    fn check(&self) -> f64 {
-        0.0
+    fn check(&self, key: &String, decrypted: &Vec<u8>) -> () {
+        let ascii_score = decrypted
+            .iter()
+            .filter(|&&byte| byte.is_ascii_alphanumeric() || byte.is_ascii_whitespace())
+            .count() as f64;
+        let score: f64 = ascii_score / decrypted.len() as f64;
+
+        if score >= self.score {
+            self.render(key, score);
+        }
     }
 }
