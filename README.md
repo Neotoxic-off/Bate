@@ -21,8 +21,6 @@ Usage: bate [OPTIONS] --file <FILE> --keys <KEYS>
 Options:
   -f, --file <FILE>
   -k, --keys <KEYS>
-      --minimum <MINIMUM>  [default: 1]
-      --maximum <MAXIMUM>  [default: 16]
   -s, --score <SCORE>      [default: 0.7]
   -h, --help               Print help
 ```
