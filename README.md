@@ -1,5 +1,5 @@
 # Bate
-🚪 Logical gate encyption bruteforcer
+🚪 Logical gate encyption dictionnary attcker
 
 ## Gates
 - Or
